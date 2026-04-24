@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 
 import './App.css'
 
@@ -15,35 +15,57 @@ function App() {
 
 
   const [inputValue, setInputValue] = useState("");
+  const [search, setSearch] = useState("");
 
-  function addTask(){
+  const addTask = useCallback(() => {
     if(!inputValue.trim()) return 
     setTasks([...tasks, {
     id: Date.now(), title: inputValue, priority:"medium"
       }])
-      setInputValue("");
-  }
+     setInputValue("");
+  },[tasks,inputValue]);
   
-  
+  const filteredTasks = useMemo(()=>{
+    return tasks.filter(task => task.title.toLowerCase().includes(search.toLowerCase()))
+  },[tasks,search])
 
-  function deleteTask(id){
-     setTasks(tasks.filter(task => task.id !== id))
-  }
+  const deleteTask = useCallback((id)=> {
+    setTasks(tasks.filter(task => task.id !==id))
+  },[tasks])
 
-  function updateTask(id){
+
+  const updateTask = useCallback((id) => {
     setTasks(tasks.map({id: Date.now(),title: inputValue, priority:"medium"}))
-  }
+  })
 
   return (
     <>
     <div style={{ padding:"24px", fontFamily: "sans-serif"}}>
     <h1>⚡Kanban Board</h1>
 
+    <input value={search} onChange={(e) => {setSearch(e.target.value)}} placeholder="Search Texts.." style={{ padding:"8px" , marginBottom:"16px", display:"block"}}/>
+
     <div style={{ marginBottom: "16px"}}>
       <input ref={inputRef} value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter a task.." style={{ padding: "8px", marginRight: "8px"}}/>
       <button onClick={addTask}>ADD TASK</button>
 
     </div>
+
+
+
+      {filteredTasks.map(task => (
+       <div key={task.id} style={{
+        padding:"10px",
+        marginBottom:"8px",
+        border:"1px solid #ccc",
+        borderRadius:"8px",
+      }}>
+        <span>{task.title}</span>
+        <button onClick={() => deleteTask(task.id)} style={{marginLeft:"12px",color: "red"}}> DELETE
+        </button>
+        </div>
+    ))}
+  
 
     {tasks.map(task => (
        <div key={task.id} style={{
@@ -58,6 +80,7 @@ function App() {
         </div>
     ))}
     </div>
+
     </>
   )
 }
